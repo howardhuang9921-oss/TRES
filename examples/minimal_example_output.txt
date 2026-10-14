@@ -1,0 +1,15 @@
+TRES | sources kept: none | temporal gate p = 5.05e-05 -> time-varying (kappa 12, tau 4, theta 16)
+       0-6m 6-12m 12-24m 24-36m
+N     0.053 0.154  0.375  0.452
+PCOSP 0.547 0.479  0.328  0.276
+       S12   S24   S36
+[1,] 0.650 0.472 0.388
+[2,] 0.636 0.442 0.352
+[3,] 0.817 0.638 0.536
+
+Frozen PDAC TRES | cell programs kept: none | temporal gate p = 3.8e-05 | kappa/tau set 1 | theta 16
+       0-6m 6-12m 12-24m 24-36m
+N     0.085 0.150  0.292  0.340
+PCOSP 0.632 0.529  0.300  0.221
+  0-6m  6-12m 12-24m 24-36m 
+  2.73   2.63   2.41   2.34 

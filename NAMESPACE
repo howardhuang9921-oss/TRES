@@ -1,0 +1,4 @@
+export(tres_score_programs, tres_fit, tres_predict, tres_gate_report, tres_transition)
+importFrom(survival, Surv, coxph, survSplit, survfit, concordance, ridge, strata)
+importFrom(stats, as.formula, pchisq, sd, plogis, quantile)
+S3method(print, tres)

@@ -1,0 +1,13 @@
+Package: TRES
+Type: Package
+Title: Evidence-Gated Time-Varying Survival Modelling with Single-Cell-Defined Source Programs
+Version: 0.1.0
+Description: Implements TRES (Time-Resolved Effect Selection). Two null-calibrated evidence gates decide (1) which cell-source
+    programs enter a clinically anchored Cox model and (2) whether covariate effects vary over follow-up time.
+    When evidence is insufficient the model reverts to the static model. Time variation uses one
+    shared smooth transition h(t; kappa, tau) with ridge shrinkage tuned by leave-one-cohort-out integrated
+    Brier score. Includes single-sample, platform-agnostic program scoring.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.2)
+Imports: survival, stats

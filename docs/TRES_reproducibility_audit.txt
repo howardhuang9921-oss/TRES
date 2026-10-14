@@ -1,0 +1,26 @@
+TRES reproducibility audit (SPEC 72; TRES was called TASA during development)
+Generated: 2026-10-09 18:49:48 CST
+Overall: PASS (17/17 checks passed)
+
+[PASS] DEV_TOTAL_N                  observed=815 | expected=815
+[PASS] DEV_TOTAL_EVENTS             observed=508 | expected=508
+[PASS] DEV_COMPLETE_TN_N            observed=794 | expected=794
+[PASS] DEV_COMPLETE_TN_EVENTS       observed=492 | expected=492
+[PASS] FINAL_TEMPORAL_GATE          observed=TRUE | expected=TRUE
+[PASS] FINAL_CELL_PROGRAMS          observed= | expected=none
+[PASS] FINAL_GATE_P                 observed=3.776e-05 | expected=<0.05
+[PASS] FINAL_COEFFICIENTS_FINITE    observed=TRUE | expected=TRUE
+[PASS] DEV_iAUC                     observed=0.7040 | expected=0.7040
+[PASS] DEV_IBS                      observed=0.1979 | expected=0.1979
+[PASS] EXT_N                        observed=616 | expected=616 | 622 patients passed outcome-free readiness; 6 had unusable outcome records
+[PASS] EXT_COHORTS                  observed=10 | expected=10
+[PASS] EXT_iAUC                     observed=0.6731 | expected=0.6731
+[PASS] EXT_IBS                      observed=0.1983 | expected=0.1983
+[PASS] EXT_UNOC                     observed=0.6288 | expected=0.6288
+[PASS] DUPLICATE_AUDIT              observed=0 | expected=0 | frozen r>0.8 and best-minus-second-best>0.1 rule
+[PASS] MANIFEST_FILES               observed=24/24 | expected=24/24
+
+Packaging finding:
+- Statistical reproduction assets are present and hash-traceable.
+- Stand-alone one-patient deployment is not yet validated because external scoring used cohort-wise standardisation and the compact final object does not serialize a complete reference-scaling/baseline bundle.
+- This is a deployment limitation, not a failure of the frozen development/external evaluation.
