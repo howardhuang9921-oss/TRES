@@ -1,42 +1,62 @@
-# TASA — evidence-gated time-varying survival modelling
+# TRES — Time-Resolved Effect Selection
 
-**TASA** (Time-Adaptive Survival Analysis) is a clinically anchored Cox model in which two null-calibrated evidence gates decide
+TRES is a prognostic model for postoperative overall survival (0–36 months) in resected pancreatic ductal adenocarcinoma (PDAC).
+It decides its own structure with two statistical tests:
 
-1. **which single-cell-defined source programs enter the model** (source gate: likelihood-ratio test per source, Bonferroni);
-2. **whether covariate effects change over follow-up time** (temporal gate: likelihood-ratio test across candidate transitions, Bonferroni).
+1. **Layer 1 (source test):** do single-cell-defined cell programs (CAF, myeloid, lymphoid) add information beyond
+   pathological T, N and the PCOSP tumour RNA score? Likelihood-ratio test per cell source, Bonferroni-corrected.
+2. **Layer 2 (time test):** do the retained effects really change over follow-up time? If yes, all time-varying effects share one
+   smooth transition curve h(t; κ, τ) with ridge shrinkage; if not, the model reverts to a static, cohort-stratified Cox model.
 
-If the evidence is insufficient, the model reverts to the static Cox model (all time-change coefficients are zero). Time variation is represented by one shared smooth transition `h(t; kappa, tau)`, with ridge shrinkage tuned by leave-one-cohort-out integrated Brier score.
+Information that adds nothing is not added; effects that do not change are not forced to change.
 
-## Why
-Time-resolved survival models (for example piecewise per-bin cell coefficients) report early-to-late "risk reversals" even when none exist. In our simulations:
-- under a static truth, interval-wise Cox models reported false early-to-late reversals in **80%** of simulations versus **1.7% for TASA**; across 1,800 simulations of varying size, TASA's false-positive rate was **2.0–3.3%** (other methods 4.0–86%);
-- power was **≥ 90%** for a moderate hand-off at n ≥ 600.
+Author: Hung-Ying Huang. Supervisor and corresponding author: Tzong-Yi Lee (National Yang Ming Chiao Tung University).
+This repository accompanies the 2027 Taiwan International Science Fair research report.
 
-## Usage
+## Repository contents
+| Path | Content |
+|---|---|
+| `R/TRES.R` | The algorithm: `tres_score_programs`, `tres_fit`, `tres_predict`, `tres_gate_report`, `tres_transition` |
+| `tests/run_tests.R` | 5 unit tests (transition shape, reversion to the static model under no effect, detection of a hand-off, valid survival curves for one new patient, invariance of single-sample scores) |
+| `examples/minimal_example.R` | Runs in seconds on synthetic data, then prints the frozen PDAC model; expected output in `minimal_example_output.txt` |
+| `frozen/TRES_frozen_PDAC_model.rds` | Frozen final PDAC model (coefficients, test results, transition and ridge settings) |
+| `docs/` | Model card, reproducibility audit (17/17 checks passed), SHA-256 manifest of the frozen analysis files, patient flow, cohort data dictionary |
+
+## Quick start
+```bash
+cd tests && Rscript run_tests.R          # expect: "all TRES tests passed"
+cd ../examples && Rscript minimal_example.R
+```
+Requires R ≥ 4.2 and the `survival` package (developed with R 4.6.0, survival 3.8.6).
+
 ```r
-source("R/TASA.R")                       # or library(TASA) after installation
-P <- tasa_score_programs(expr, programs, universe = common_genes, centre_by = cohort)   # single-sample scores
-fit <- tasa_fit(train, static = "T", core = c("N", "PCOSP"),
+source("R/TRES.R")
+fit <- tres_fit(train, static = "T", core = c("N", "PCOSP"),
                 sources = list(CAF = c("CAF1","CAF2"), MYELOID = c("MY1","MY2"), LYMPHOID = c("LY1","LY2")))
-print(fit)                               # gate decisions
-tasa_gate_report(fit)$log_hr            # log-HR trajectory per interval
-tasa_predict(fit, new_patient, months = c(12, 24, 36))   # one new patient, no retraining
+print(fit)                                  # test results
+tres_gate_report(fit)$log_hr                # log hazard ratio per interval
+tres_predict(fit, new_patient, months = c(12, 24, 36))
 ```
 Input data need the columns `time` (months), `event` (0/1), `cohort`, and standardised covariates.
 
-## Properties
-- At most `2·|V| + |static|` parameters (≤ 18 in the PDAC application). Fits in milliseconds to seconds on a laptop CPU.
-- **Single-sample scoring, batch-referenced standardisation.** Raw program scores are within-sample ranks and need no retraining. The validated PDAC pipeline, however, standardised scores within cohort, so a new site currently needs a local reference batch; stand-alone one-patient absolute-risk use is not yet validated.
-- Tests: `Rscript tests/run_tests.R` checks:
-  - the shape of the transition;
-  - reversion to the static model under no effect;
-  - detection of a hand-off;
-  - valid survival curves for a single new patient;
-  - invariance of single-sample scores.
+## Main results (from the report)
+- Simulation with no true time change: false early–late reversals in 80.0% of datasets for the scTREND risk layer vs 1.7% for TRES.
+- PDAC development (4 cohorts, 794 patients, leave-one-cohort-out): time-dependent AUC 0.704 and IBS 0.1979, best among nine models.
+- Frozen external validation (10 cohorts, 616 patients): time-dependent AUC 0.673 vs 0.575 for AJCC staging; comparable to the static
+  T+N+PCOSP model.
 
-## Validation (pre-registered, SHA-256-frozen analyses)
-- Simulation: SPEC_60, SPEC_62, SPEC_65.
-- PDAC development (4 cohorts, 794 patients): SPEC_61/62.
-- 12 TCGA cancers + METABRIC: SPEC_64.
-- PDAC external validation (10 cohorts, 616 patients): SPEC_63.
-- Head-to-head against full scTREND on its own melanoma data: SPEC_66.
+## Data availability
+No patient-level data are included. All cohorts are public: E-MTAB-6134 and E-MTAB-6830 (ArrayExpress); PCSI, ICGC array, KIRBY, OUH
+and Collisson (MetaGxPancreas); TCGA-PAAD (GDC/Xena); GSE21501, GSE57495, GSE62452, GSE224564 and GSE263733 (GEO); CPTAC-PDA and
+CPTAC-GDC (PDC/GDC/cBioPortal). `docs/TRES_file_manifest.csv` lists the SHA-256 hashes of the frozen analysis plans, scripts and model
+objects used in the study (internal file names keep the development name TASA).
+
+## Limitations
+- Research model only; it is not a treatment-response model and not a cleared medical device.
+- External scoring used within-cohort standardisation, so a new site currently needs a local reference batch. The frozen object stores
+  coefficients and test results but not the reference distribution or development baseline hazard, so absolute survival for a single
+  new patient is not yet supported by this package.
+- External calibration was not recalibrated (observed/expected 1.15–1.23); prospective validation is required.
+
+## License
+MIT (see `LICENSE`).
